@@ -1,0 +1,111 @@
+Initial Requirement:- Given a complete image (jpg, png) of a handwritten document, Extract text from it 
+
+Stage 1:
+
+Thinking - Find a single, opensource OCR that can extract text from entire image in a single shot
+
+Implementation -
+ 
+1. Tried multiple opensource OCRs having full page text extraction capabilities (pytesseract, paddle text recognition, easy ocr,.. etc), none with satisfying results due to low accuracy
+
+2. Looked for state of the art ocr model for accuracy of detected handwritten text, came across trocr, but since trocr was trained on datasets like IAM, it only worked with single line text images and completely failed when given images with 2 or more lines
+
+Stage 2:
+
+Thinking - Utilize trocr for handwriting detection, and figure out preprocessing required to divide the image into single sentences
+
+Implementation -
+
+1. Looked into an existing, working implementation of trocr that works, nothing existed that would give satisfying results
+
+2. Looked into open source ocrs to detect text zones in images, which could be used to detect individual text sentences in a handwritten document
+
+3. Came across multiple OCR for text detection, craft OCR seemed most promising, and was also recommended by Niels Rogge
+
+4. Implemented craft with trocr, with some initial success for the first POC
+
+Stage 3:
+
+Requirement update - Improve accuracy and consistency
+
+Thinking - Craft OCR was giving text detection results, however they werent ideal as consistency of sentence detection was sub-par because it tended to include multiple sentences if they were vertically close together in the image, so i would try to tune its hyper parameters.
+
+Implementation -
+
+1. Researched into significant parameters of craft to include longer bboxes for sentence and stop extension of bboxes downwards
+
+2. Came across --text-thresh and --sentence-thresh parameters, --text-thresh sets a threshold for whether a pixel is text or not and --sentence-thresh sets threshold for whether consequent words, close together, belong to a single sentence
+
+3. Tuned these parameters to further optimize craft but results were still inconsistent
+
+Stage 4:
+
+Thinking - Replace craft with some other viable alternative
+
+Implementation -
+
+1. Researched into other standalone state of the art OCRs for text detection along with craft
+
+2. Came across Paddle OCR for text detection
+
+3. Tested Paddle ocr, the tendency of paddle to limit the vertical size of its bounding boxes made it seem like a promising candidate
+
+4. Implemented Paddle OCR along with TrOCR, results were much more consistent than the previous versions
+
+5. Tuned the same parameters as craft to further optimize the collective handwriting extractor on answer sheets
+
+Stage 5:
+
+Requirement update - Reduce execution time of the handwriting extractor
+
+Thinking - The extractor was running inference on CPU, utilizing a GPU would vastly improve execution times
+
+Implementation -
+
+1. To utilize GPU, both paddle and trocr needed to be run on GPU
+
+2. To run paddle on gpu, simply installing "paddlepaddle-gpu" and running the text detection script with "--use-gpu = True" along with some additional symlinks for libraries like libssl.so.1 and libcrypto.so.1.1 worked
+
+3. To run trocr on gpu, there was no default option or setting, so the entire model, along with the inputs needed to be loaded onto the GPU
+
+4. This, along with additional optimizing steps like loading the model globally instead of with every function call, greatly reduced execution times.
+
+Stage 6:
+
+Requirement update - Incorporate multi-threading into extractor to optimize gpu usage
+
+Thinking - Divide number of sentences based on number of threads to be simultaneously processed by the GPU for trocr, paddle is very quick on unithreaded application
+
+Implementation -
+
+1. Designed custom logic to divide individual sentences amongst multiple threads
+
+2. Utilized dictionary of threads and executed them simultaneously to ensure paralellism
+
+Stage 7:
+
+Requirement update - Make into flask api and a Gradio Demo
+
+Implementation -
+
+1. Made a post flask api that initially accepted image path, and later updated it to include uploadable images
+
+2. Made gradio demo that ran in local, but later ran off of the api
+
+Stage 8:
+
+Requirement update - Make the handwriting software into a docker image for server deployment
+
+Thinking - Implementing paddle and trocr on GPU required multiple sym links and configuration changes to the base environment, making it unsuitable for server deployment
+
+Implementation - 
+
+1. Set up a docker run-time on base system, initially tried to build entire vm out of ubuntu-22.04 base image, but only was able to set up without cuda (only on CPU)
+
+2. To set up the API on GPU, nvidia-container-toolkit was required to allow a docker container to utilize GPU
+
+3. Also updated the base image to pull from "nvidia/cuda:11.7 cudnn8 devel" base image instead
+
+4. Built the complete environment with the appropriate configuration changes and sym-links set up
+
+5. Wrote a Dockerfile to completely build the image within a server environment and included shell scripts (mentioned in the readme file) to make it easier to launch the docker image into a server environment

@@ -1,0 +1,32 @@
+1. Made new requirements file according to versions from august 23
+
+2. Torch not compiled with cuda (no cuda in python environment) -
+    nvcc not found in environment
+    conda install -c conda-forge cudatoolkit-dev=11.7.1 (not found)
+    conda install cudatoolkit-dev=11.7.1 -c nvidia (not found)
+    conda install -c conda-forge cudatoolkit-dev=11.7.0 (Worked)
+
+3. Torch not compiled with cuda (pytorch/cuda version mismatch) - 
+    conda uninstall pytorch torchvision torchaudio -c pytorch (not found)
+    pip uninstall torch (worked)
+    conda install pytorch torchvision torchaudio cudatoolkit=11.7 -c pytorch (not found cudatoolkit=11.7)
+    conda uninstall pytorch torchvision torchaudio -c pytorch (not found)
+    pip uninstall torch torchvision torchaudio (not found)
+    pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117 (worked)\
+
+4. Torch not compiled with cuda - 
+    pip uninstall torch torchvision torchaudio
+    pip install torch==2.0.1 torchvision==0.17.1 torchaudio==2.0.1 --extra-index-url https://download.pytorch.org/whl/cu117 (failed)
+    pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --extra-index-url https://download.pytorch.org/whl/cu117 (Worked)
+
+5. Gradio Error (not attribute 'inputs') - 
+    Made gradio_demo_new.py(worked)
+
+6. SyntaxError: unexpected EOF while parsing - 
+    master_api.py line 144 - "python3 predict_det.py" to "python predict_det.py"
+    master_api.py line 147 - delete(" --det_algorithm='DB++'")
+    master_api.py line 146 -         " --det_model_dir='en_PP-OCRv3_det_infer/'" to "D:\Experimental\proj\Completebuild_ 3\en_PP-OCRv3_det_infer
+    conda uninstall -c conda-forge cudatoolkit-dev=11.7.0
+    conda install -c conda-forge cudatoolkit-dev=10
+    installed cuda 10 system wide and made new env with cuda 10 base and requirements_new.txt
+
